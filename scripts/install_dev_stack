@@ -1,6 +1,7 @@
 #/bin/bash
 
 suser=stack
+ip_addr=`ip addr | grep "inet " | grep -v 127 | awk '{print $2}' | awk -F/ '{print $1}'`
 
 echo -n enter the hostname:
 read hname
@@ -22,6 +23,14 @@ echo "Exiting shell, restart the guest and continue with the script"
 exit
 fi
 
+echo -n enter the password:
+read spassword
+
+if [ "$spassword" == "" ]; then
+	echo "password cannot be empty"
+	exit
+fi
+
 echo -n "enter the github branch ('Enter' for HEAD, stable/havana, etc.):"
 read branch
 
@@ -37,30 +46,17 @@ cd /home/$suser
 EOF
 fi
 
-sudo -u $suser -i <<EOF
-echo '[[local|localrc]]' > /home/$suser/devstack/local.conf
-echo 'ENABLED_SERVICES+=,heat,h-api,h-api-cfn,h-api-cw,h-eng' >> /home/$suser/devstack/local.conf
-echo 'ADMIN_PASSWORD=passw0rd' >> /home/$suser/devstack/local.conf
-echo 'DATABASE_PASSWORD=passw0rd' >> /home/$suser/devstack/local.conf
-echo 'RABBIT_PASSWORD=passw0rd' >> /home/$suser/devstack/local.conf
-echo 'SERVICE_PASSWORD=passw0rd' >> /home/$suser/devstack/local.conf
-echo 'SERVICE_TOKEN=a682f596-76f3-11e3-b3b2-e716f9080d50' >> /home/$suser/devstack/local.conf
-echo '#FIXED_RANGE=172.31.1.0/24' >> /home/$suser/devstack/local.conf
-echo '#FLOATING_RANGE=192.168.20.0/25' >> /home/$suser/devstack/local.conf
-echo '#HOST_IP=10.3.4.5' >> /home/$suser/devstack/local.conf
-echo 'disable_service n-net' >> /home/$suser/devstack/local.conf
-echo 'enable_service q-svc' >> /home/$suser/devstack/local.conf
-echo 'enable_service q-agt' >> /home/$suser/devstack/local.conf
-echo 'enable_service q-dhcp' >> /home/$suser/devstack/local.conf
-echo 'enable_service q-l3' >> /home/$suser/devstack/local.conf
-echo 'enable_service q-meta' >> /home/$suser/devstack/local.conf
-echo 'enable_service neutron' >> /home/$suser/devstack/local.conf
-echo 'enable_service tempest' >> /home/$suser/devstack/local.conf
-EOF
-
 sudo -i <<EOF
 echo "$suser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 EOF
+
+echo -n "Create local.conf (y/n):"
+read localconf
+if [ "$localconf" == "y" ]; then
+	cp /usr/local/openstack/conf/local.conf /home/$suser/devstack
+	sed -i "s/__IP_ADDRESS__/$ip_addr/g" /home/$suser/devstack/local/conf
+	sed -i "s/__PASSWORD__/$spassword/g" /home/$suser/devstack/local/conf
+fi
 
 echo -n "Continue with stack.sh execution (y/n):"
 read scont
