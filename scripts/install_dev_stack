@@ -53,9 +53,9 @@ EOF
 echo -n "Create local.conf (y/n):"
 read localconf
 if [ "$localconf" == "y" ]; then
-	cp /usr/local/openstack/conf/local.conf /home/$suser/devstack
-	sed -i "s/__IP_ADDRESS__/$ip_addr/g" /home/$suser/devstack/local/conf
-	sed -i "s/__PASSWORD__/$spassword/g" /home/$suser/devstack/local/conf
+	sudo -u $suser -i cp /usr/local/openstack/conf/local.conf /home/$suser/devstack
+	sudo -u $suser -i sed -i "s/__IP_ADDRESS__/$ip_addr/g" /home/$suser/devstack/local.conf
+	sudo -u $suser -i sed -i "s/__PASSWORD__/$spassword/g" /home/$suser/devstack/local.conf
 fi
 
 echo -n "Continue with stack.sh execution (y/n):"
